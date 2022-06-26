@@ -1,0 +1,4 @@
+startgame {
+    hook startgame
+    user player
+}

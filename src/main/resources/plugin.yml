@@ -1,0 +1,4 @@
+name: Minigames
+version: '${version}'
+main: dev.u9g.minigames.Minigames
+api-version: 1.18
