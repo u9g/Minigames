@@ -1,4 +1,4 @@
-package dev.u9g.minigames
+package dev.u9g.minigames.util
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

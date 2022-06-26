@@ -1,14 +1,12 @@
 package dev.u9g.minigames
 
+import dev.u9g.minigames.util.Task
 import net.kyori.adventure.text.minimessage.MiniMessage
-import net.kyori.adventure.util.Ticks
 import org.bukkit.Bukkit
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
-import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 
 fun String.mm() = MiniMessage.miniMessage().deserialize(this)
 
@@ -45,5 +43,4 @@ fun Inventory.draw(patterns: List<String>, replacements: Map<Char, ItemStack>) {
 
 operator fun String.times(n: Int) = this.repeat(n)
 
-//fun runAfterSeconds(seconds: Double, cb: Consumer<Task?>) = Task.syncDelayed((Ticks.TICKS_PER_SECOND * seconds).toLong(), cb)
 fun runSync (cb: () -> Unit) = Task.syncDelayed { cb() }
