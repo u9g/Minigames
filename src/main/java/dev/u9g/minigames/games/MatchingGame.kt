@@ -1,8 +1,10 @@
 package dev.u9g.minigames
 
-import com.github.u9g.u9gutils.ItemBuilder
+import dev.u9g.minigames.games.GatheringGame
 import dev.u9g.minigames.util.Task
-import dev.u9g.minigames.util.TickingCountdown
+import dev.u9g.minigames.util.TaskResult
+import dev.u9g.minigames.util.showRules
+import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.util.Ticks
 import org.bukkit.Bukkit
@@ -12,43 +14,12 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import redempt.redlib.inventorygui.InventoryGUI
 import redempt.redlib.inventorygui.ItemButton
-import java.util.concurrent.CompletableFuture
 
-private val RULES_INVENTORY_NAME = "Matching Game Rules".mm()
 private val HELP_LORE: List<Component> = listOf(
     "You will be given turns on a board in which you can turn over 2 cards at a time.".mm(),
     "The objective is to flip cards over until you find <gold>two matching cards,</gold>".mm(),
     "then you flip those two cards over and they will be removed from the board.".mm(),
     "Continue doing so until the board is empty, then you have finished your board.".mm()
-)
-
-private enum class HEADS(private val headTexture: String) {
-    R("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTVjZWQ5OTMxYWNlMjNhZmMzNTEzNzEzNzliZjA1YzYzNWFkMTg2OTQzYmMxMzY0NzRlNGU1MTU2YzRjMzcifX19"),
-    U("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjA3ZmJjMzM5ZmYyNDFhYzNkNjYxOWJjYjY4MjUzZGZjM2M5ODc4MmJhZjNmMWY0ZWZkYjk1NGY5YzI2In19fQ=="),
-    L("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzE5ZjUwYjQzMmQ4NjhhZTM1OGUxNmY2MmVjMjZmMzU0MzdhZWI5NDkyYmNlMTM1NmM5YWE2YmIxOWEzODYifX19"),
-    E("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGJiMjczN2VjYmY5MTBlZmUzYjI2N2RiN2Q0YjMyN2YzNjBhYmM3MzJjNzdiZDBlNGVmZjFkNTEwY2RlZiJ9fX0="),
-    S("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2U0MWM2MDU3MmM1MzNlOTNjYTQyMTIyODkyOWU1NGQ2Yzg1NjUyOTQ1OTI0OWMyNWMzMmJhMzNhMWIxNTE3In19fQ==");
-
-    fun getHead(): ItemStack = ItemBuilder.of(Material.PLAYER_HEAD).setHeadSkin(headTexture).name(RULES_INVENTORY_NAME).lore(
-        HELP_LORE).build()
-
-    operator fun invoke(): ItemStack {
-        return this.getHead()
-    }
-}
-
-private fun makeFillerItem(stackSize: Int) = ItemBuilder.of(Material.WHITE_STAINED_GLASS_PANE).count(stackSize).build()
-
-private fun updateHelpInventory(inventory: Inventory, bgItem: ItemStack) = inventory.draw(
-    listOf("o" * 9,
-        "o"*2 + "R" + "U" + "L" + "E" + "S" + "o"*2,
-        "o" * 9),
-    mapOf('o' to bgItem,
-        'R' to HEADS.R(),
-        'U' to HEADS.U(),
-        'L' to HEADS.L(),
-        'E' to HEADS.E(),
-        'S' to HEADS.S())
 )
 const val SLOTS_IN_CHEST = 27
 const val IS_ODD = SLOTS_IN_CHEST % 2 == 1
@@ -63,7 +34,7 @@ class MatchingGame private constructor(private val player: Player) {
     private var turns: Int = 0
     private var lastClickedSlot: Int = -1
     private var matchesLeft: Int = HALF_OF_SLOTS_IN_INV
-    private val inv: Inventory = Bukkit.createInventory(null, SLOTS_IN_CHEST, RULES_INVENTORY_NAME)
+    private val inv: Inventory = Bukkit.createInventory(null, SLOTS_IN_CHEST, "Match em!".mm())
     private val gui: InventoryGUI = InventoryGUI(inv)
     private var waitingForPlayerToSeeVisibleItems = false
     private val hiddenItems = USABLE_MATERIALS.take(HALF_OF_SLOTS_IN_INV)
@@ -157,25 +128,11 @@ class MatchingGame private constructor(private val player: Player) {
     }
 
     companion object {
-        private fun showRules(player: Player): CompletableFuture<Void> {
-            val cf = CompletableFuture<Void>()
-            val rulesInventory = Bukkit.createInventory(null, 27, RULES_INVENTORY_NAME)
-            val rulesGUI = InventoryGUI(rulesInventory)
-            rulesGUI.open(player)
-            val countdown = TickingCountdown.sync(
-                endAfterSeconds = 10,
-                onTick = { runSync { updateHelpInventory(rulesInventory, makeFillerItem(-(it.timesRun-10))) } },
-                onTimeout = { runSync { rulesGUI.destroy().apply { cf.complete(null) } } }
-            )
-            rulesGUI.setOnDestroy { countdown.cancel() }
-            return cf
-        }
-
         fun start(player: Player) {
-            showRules(player).thenAccept {
-                // TODO: Make a player -> Game map
-                MatchingGame(player)
-            }
+            // TODO: Make Player -> Game Map
+            showRules("Matching", HELP_LORE, player)
+                .thenAccept { it.ifFinished { MatchingGame(player) } }
+                .whenComplete { _, err -> err?.sendToOps() }
         }
     }
 }

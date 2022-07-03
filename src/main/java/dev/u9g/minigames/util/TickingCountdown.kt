@@ -1,52 +1,58 @@
 package dev.u9g.minigames.util
 
+import dev.u9g.minigames.getCallingPlugin
+import dev.u9g.minigames.runSync
+import net.kyori.adventure.util.Ticks
+import org.bukkit.scheduler.BukkitRunnable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class TickingCountdown private constructor(endAfterSeconds: Int,
-                                           private val secondsBetween: Int,
-                                           val onTick: (TickingCountdown) -> Unit,
-                                           val onTimeout: () -> Unit) {
+class TickingCountdown constructor(
+    endAfterSeconds: Int = 10,
+    private val secondsBetween: Int = 1,
+    private val onTick: (TickingCountdown) -> Unit = {},
+    private val onTimeout: () -> Unit = {},
+    private val runOnMain: Boolean = true) {
+
     private var isDone = false
     var timesRun = 0
     private var secondsLeft: Double = endAfterSeconds.toDouble()
 
     init {
-        if (!isDone) {
-            onTick(this)
-            startTicking()
-        }
+        if (!isDone) runCallbackAfter(0)
     }
 
-    private fun startTicking() {
-        scheduleCallback()
-    }
-
-    private fun doNextCallback() {
-        scheduleCallback()
-    }
-
-    private fun scheduleCallback() = Executors.newSingleThreadScheduledExecutor().schedule({
+    private fun runInCallback() {
         if (!isDone && secondsLeft > 0) {
-            if (secondsLeft-secondsBetween <= 0) {
+            secondsLeft -= secondsBetween
+            timesRun++
+            if (secondsLeft <= 0) {
                 onTimeout()
             } else {
                 onTick(this)
-                doNextCallback()
             }
+            runCallbackAfter(secondsBetween)
         }
-        secondsLeft -= secondsBetween
-        timesRun++
-    }, secondsBetween.toLong(), TimeUnit.SECONDS)
+    }
+
+    private fun runCallbackAfter(seconds: Int) {
+        if (runOnMain) {
+            object : BukkitRunnable() {
+                override fun run() {
+                    try {
+                        runInCallback()
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
+            }.runTaskLater(getCallingPlugin(), (Ticks.TICKS_PER_SECOND * seconds).toLong())
+        } else {
+            Executors.newSingleThreadScheduledExecutor()
+                .schedule({ runInCallback() }, seconds.toLong(), TimeUnit.SECONDS)
+        }
+    }
 
     fun cancel() {
         isDone = true
-    }
-
-    companion object {
-        fun sync(endAfterSeconds: Int = 10,
-                 onTick: (TickingCountdown) -> Unit = {},
-                 onTimeout: () -> Unit = {},
-                 secondsBetween: Int = 1) = TickingCountdown(endAfterSeconds, secondsBetween, onTick, onTimeout)
     }
 }

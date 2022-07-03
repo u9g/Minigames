@@ -1,6 +1,5 @@
 package dev.u9g.minigames
 
-import com.destroystokyo.paper.profile.PlayerProfile
 import com.destroystokyo.paper.profile.ProfileProperty
 import com.github.u9g.u9gutils.NBTUtil
 import net.kyori.adventure.text.Component
