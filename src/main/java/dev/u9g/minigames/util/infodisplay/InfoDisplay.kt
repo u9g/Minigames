@@ -1,7 +1,9 @@
-package dev.u9g.minigames.util
+package dev.u9g.minigames.util.infodisplay
 
-import com.github.u9g.u9gutils.ItemBuilder
-import dev.u9g.minigames.*
+import dev.u9g.minigames.draw
+import dev.u9g.minigames.makeItem
+import dev.u9g.minigames.mm
+import dev.u9g.minigames.times
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -22,7 +24,7 @@ const val EMERALD_HEAD_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly
 
 private fun makeFillerItem(stackSize: Int) = makeItem(material = Material.WHITE_STAINED_GLASS_PANE, count = stackSize)
 
-fun showRules(gameName: String, helpLore: List<Component>, player: Player): CompletableFuture<TaskResult> {
+fun showInfo(gameName: String, helpLore: List<Component>, player: Player): CompletableFuture<TaskResult> {
     val cf = CompletableFuture<TaskResult>()
 
     val head = makeItem(material = Material.PLAYER_HEAD, headTexture = EMERALD_HEAD_TEXTURE, name = "<gradient:aqua:red>Game Info".mm(), lore = helpLore)
@@ -46,7 +48,7 @@ fun showRules(gameName: String, helpLore: List<Component>, player: Player): Comp
             rulesGUI.setOnDestroy {}
             rulesGUI.destroy()
             rulesGUI.inventory.close()
-            cf.complete(TaskResult.LEFT_TASK)
+            cf.complete(TaskResult.FINISHED_TASK)
         }
     )
     rulesGUI.setOnDestroy {
