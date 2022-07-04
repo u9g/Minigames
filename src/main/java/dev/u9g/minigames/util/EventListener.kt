@@ -2,11 +2,7 @@ package dev.u9g.minigames.util
 
 import dev.u9g.minigames.getCallingPlugin
 import org.bukkit.Bukkit
-import org.bukkit.event.Event
-import org.bukkit.event.EventHandler
-import org.bukkit.event.EventPriority
-import org.bukkit.event.HandlerList
-import org.bukkit.event.Listener
+import org.bukkit.event.*
 
 typealias EventListenerFunction<T> = (event: T) -> Unit
 typealias EventListenerWithTaskFunction<T> = (event: T, listener: EventListener<T>) -> Unit

@@ -1,7 +1,6 @@
 package dev.u9g.minigames.util
 
 import dev.u9g.minigames.getCallingPlugin
-import dev.u9g.minigames.runSync
 import net.kyori.adventure.util.Ticks
 import org.bukkit.scheduler.BukkitRunnable
 import java.util.concurrent.Executors

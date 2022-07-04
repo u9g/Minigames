@@ -4,12 +4,11 @@ import dev.u9g.minigames.draw
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.mm
 import dev.u9g.minigames.times
+import dev.u9g.minigames.util.TickingCountdown
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.Inventory
-import org.bukkit.inventory.ItemStack
 import redempt.redlib.inventorygui.InventoryGUI
 import java.util.concurrent.CompletableFuture
 
@@ -22,40 +21,73 @@ import java.util.concurrent.CompletableFuture
 
 const val EMERALD_HEAD_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWM5MDZkNjg4ZTY1ODAyNTY5ZDk3MDViNTc5YmNlNTZlZGM4NmVhNWMzNmJkZDZkNmZjMzU1MTZhNzdkNCJ9fX0="
 
-private fun makeFillerItem(stackSize: Int) = makeItem(material = Material.WHITE_STAINED_GLASS_PANE, count = stackSize)
+val fillerItem = makeItem(material = Material.WHITE_STAINED_GLASS_PANE)
 
-fun showInfo(gameName: String, helpLore: List<Component>, player: Player): CompletableFuture<TaskResult> {
+class InfoDisplay(gameName: String,
+                  helpLore: List<Component>,
+                  player: Player,
+                  defaultBackgroundStackSize: Int,
+                  private val onClosedByPlayer: () -> Unit){
+    private val head = makeItem(material = Material.PLAYER_HEAD, headTexture = EMERALD_HEAD_TEXTURE, name = "<gradient:aqua:red>Game Info".mm(), lore = helpLore)
+    private val inventory = Bukkit.createInventory(null, 27, gameName.mm())
+    private val gui = InventoryGUI(inventory)
+
+    fun update(backgroundStackSize: Int) {
+        inventory.draw(
+            listOf("o" * 9,
+                "o" + "i".repeat(7) + "o",
+                "o" * 9),
+            mapOf('o' to fillerItem.asQuantity(backgroundStackSize),
+                'i' to head)
+        )
+    }
+
+    init {
+        update(defaultBackgroundStackSize)
+        gui.open(player)
+        gui.setOnDestroy {
+            onClosedByPlayer()
+        }
+    }
+
+    fun destroy() {
+        gui.setOnDestroy {}
+        gui.destroy()
+        gui.inventory.close()
+    }
+}
+
+fun showInfoForSeconds(gameName: String, helpLore: List<Component>, player: Player, seconds: Int = 10): CompletableFuture<TaskResult> {
     val cf = CompletableFuture<TaskResult>()
+    var countdown: TickingCountdown? = null
 
-    val head = makeItem(material = Material.PLAYER_HEAD, headTexture = EMERALD_HEAD_TEXTURE, name = "<gradient:aqua:red>Game Info".mm(), lore = helpLore)
+    val disp = InfoDisplay(gameName, helpLore, player, seconds) {
+        countdown?.cancel()
+        cf.complete(TaskResult.LEFT_TASK)
+    }
 
-    fun updateHelpInventory(inventory: Inventory, bgItem: ItemStack) = inventory.draw(
-        listOf("o" * 9,
-            "o" + "i".repeat(7) + "o",
-            "o" * 9),
-        mapOf('o' to bgItem,
-            'i' to head)
-    )
-
-    val rulesInventory = Bukkit.createInventory(null, 27, gameName.mm())
-    val rulesGUI = InventoryGUI(rulesInventory)
-    updateHelpInventory(rulesInventory, makeFillerItem(10))
-    rulesGUI.open(player)
-    val countdown = TickingCountdown(
-        endAfterSeconds = 10,
-        onTick = { updateHelpInventory(rulesInventory, makeFillerItem(-(it.timesRun-10))) },
+    countdown = TickingCountdown(
+        endAfterSeconds = seconds,
+        onTick = { disp.update(-(it.timesRun-seconds)) },
         onTimeout = {
-            rulesGUI.setOnDestroy {}
-            rulesGUI.destroy()
-            rulesGUI.inventory.close()
+            disp.destroy()
             cf.complete(TaskResult.FINISHED_TASK)
         }
     )
-    rulesGUI.setOnDestroy {
-        countdown.cancel()
-        cf.complete(TaskResult.LEFT_TASK)
-    }
+
     return cf
+}
+
+fun showInfoUntilCallbackCalled(gameName: String, helpLore: List<Component>, player: Player): () -> TaskResult {
+    var result = TaskResult.FINISHED_TASK
+    val disp = InfoDisplay(gameName, helpLore, player, 1) {
+        result = TaskResult.LEFT_TASK
+    }
+
+    return {
+        disp.destroy()
+        result
+    }
 }
 
 enum class TaskResult {
