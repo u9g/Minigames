@@ -1,6 +1,5 @@
 package dev.u9g.minigames.util
 
-import dev.u9g.minigames.getCallingPlugin
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import java.util.function.Consumer

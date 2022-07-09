@@ -1,4 +1,4 @@
-startgame game:game {
+startgame,sg game:game {
     hook startgame
     user player
 }

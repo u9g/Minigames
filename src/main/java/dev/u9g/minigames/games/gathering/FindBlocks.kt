@@ -1,0 +1,73 @@
+package dev.u9g.minigames.games.gathering
+
+import com.destroystokyo.paper.MaterialSetTag
+import dev.u9g.minigames.util.*
+import dev.u9g.minigames.util.EventListener
+import dev.u9g.minigames.util.infodisplay.TaskResult
+import dev.u9g.minigames.util.infodisplay.showInfoUntilCallbackCalled
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.Tag
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import org.bukkit.*
+import org.bukkit.entity.Player
+import org.bukkit.event.block.BlockBreakEvent
+
+class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
+    private val materialTracked: Set<Material> = MaterialSetTag.DIRT.values//setOf(Material.SEAGRASS)
+    private var prepareDone: () -> TaskResult = showInfoUntilCallbackCalled("findBlocks".mm(), listOf("find as many dirt blocks as you can in 3 minutes".mm()), player)
+    private var materialTrackingListener: EventListener<BlockBreakEvent>? = null
+    private var tickingCountdown: TickingCountdown? = null
+    private var gameState = GameState.STARTING
+
+    override fun begin() = prepareGame()
+
+    override fun prepareGame() {
+        world.makeWorld()
+        preparePlayer()
+    }
+
+    override fun preparePlayer() {
+        playerData.resetPlayerData()
+        if (prepareDone() != TaskResult.FINISHED_TASK) return endGame()
+        player.teleportAsync(world.spawnPoint()).thenAccept { startGame() }
+    }
+
+    override fun startGame() {
+        gameState = GameState.IN_PROGRESS
+        var blocksMined = 0
+        materialTrackingListener = EventListener(BlockBreakEvent::class.java) {
+            blocksMined++
+        }.filter { it.player === player && materialTracked.contains(it.block.type) }
+        tickingCountdown = TickingCountdown(
+            endAfterSeconds = 60,
+            // tick the player's counter on their hotbar
+            onTick = {
+                player.sendActionBar("<aqua>${-(it.timesRun-60)}</aqua> sec left".mm())
+            },
+            // end the game when it's over
+            onTimeout = {
+                playerData.resetPlayerToSnapshot().thenAccept {
+                    materialTrackingListener?.unregister()
+                    player.sendMessage(MiniMessage.miniMessage().deserialize("You mined <green>${blocksMined}</green> <brown>dirt</brown> blocks",
+                            TagResolver.resolver("brown", Tag.styling(TextColor.color(0x8B4513)))))
+                    endGame()
+                }
+            }
+        )
+    }
+
+    override fun endGame() {
+        world.delete()
+        gameState = GameState.OVER
+    }
+
+    override fun onPlayerLogout() {
+        playerData.resetPlayerToSnapshot().join()
+        materialTrackingListener?.unregister()
+        tickingCountdown?.cancel()
+        endGame()
+    }
+
+    override fun gameState() = gameState
+}

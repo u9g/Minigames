@@ -22,6 +22,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("dev.u9g:U9GUtils:1.1.0")
     implementation("com.github.Redempt:RedLib:6.5.2")
+    implementation(kotlin("reflect"))
 }
 
 java {

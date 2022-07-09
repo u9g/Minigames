@@ -1,12 +1,14 @@
-package dev.u9g.minigames
+package dev.u9g.minigames.util
 
-import dev.u9g.minigames.util.Task
+import com.destroystokyo.paper.MaterialSetTag
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
+import org.bukkit.Material
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
+import java.io.File
 
 fun String.mm() = MiniMessage.miniMessage().deserialize(this)
 
@@ -44,3 +46,6 @@ fun Inventory.draw(patterns: List<String>, replacements: Map<Char, ItemStack>) {
 operator fun String.times(n: Int) = this.repeat(n)
 
 fun runSync (cb: () -> Unit) = Task.syncDelayed { cb() }
+
+operator fun MaterialSetTag.contains(material: Material?): Boolean = material?.let { this.isTagged(it) } ?: false
+operator fun MaterialSetTag.contains(item: ItemStack?): Boolean = item?.let { this.isTagged(it) } ?: false
