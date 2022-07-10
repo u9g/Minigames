@@ -4,6 +4,7 @@ import com.destroystokyo.paper.MaterialSetTag
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.block.Block
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
@@ -49,3 +50,4 @@ fun runSync (cb: () -> Unit) = Task.syncDelayed { cb() }
 
 operator fun MaterialSetTag.contains(material: Material?): Boolean = material?.let { this.isTagged(it) } ?: false
 operator fun MaterialSetTag.contains(item: ItemStack?): Boolean = item?.let { this.isTagged(it) } ?: false
+operator fun MaterialSetTag.contains(item: Block?): Boolean = item?.let { this.isTagged(it) } ?: false

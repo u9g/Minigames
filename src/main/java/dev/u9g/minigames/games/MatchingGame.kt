@@ -1,5 +1,6 @@
 package dev.u9g.minigames.games
 
+import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.GameState
 import dev.u9g.minigames.util.mm
@@ -77,6 +78,11 @@ class MatchingGame (private val player: Player) : Game {
             }, slot)
         }
         gui.open(player)
+        gui.setOnDestroy {
+            if (gameState != GameState.OVER) {
+                internalEndGame()
+            }
+        }
     }
 
     private fun processClick(slotClicked: Int) {
@@ -128,10 +134,15 @@ class MatchingGame (private val player: Player) : Game {
     }
 
     private fun onGameOver() {
+        internalEndGame()
+        player.sendMessage("It took <green>$turns</green> <aqua>turns</aqua> to find <green>$HALF_OF_SLOTS_IN_INV <aqua>matches</aqua>".mm())
+    }
+
+    fun internalEndGame() {
+        gameState = GameState.OVER
         inv.close()
         gui.destroy()
-        player.sendMessage("It took <green>$turns</green> <aqua>turns</aqua> to find <green>$HALF_OF_SLOTS_IN_INV <aqua>matches</aqua>".mm())
-        gameState = GameState.OVER
+        Minigames.activeGames.remove(player)
     }
 
     init {
@@ -150,7 +161,7 @@ class MatchingGame (private val player: Player) : Game {
                         startGame()
                     }
                     TaskResult.LEFT_TASK -> {
-                        gameState = GameState.OVER
+                        internalEndGame()
                     }
                     null -> throw Error("Game state is null?")
                 }

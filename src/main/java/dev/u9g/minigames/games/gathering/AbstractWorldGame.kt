@@ -7,7 +7,7 @@ import dev.u9g.minigames.util.GameState
 import org.bukkit.entity.Player
 
 abstract class AbstractWorldGame(player: Player) : Game {
-    protected val world = GatheringWorld()
+    val world = GatheringWorld()
     protected val playerData = PlayerData(player)
 
     protected abstract fun prepareGame()

@@ -1,6 +1,7 @@
 package dev.u9g.minigames.games.gathering
 
 import com.destroystokyo.paper.MaterialSetTag
+import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.util.*
 import dev.u9g.minigames.util.EventListener
 import dev.u9g.minigames.util.infodisplay.TaskResult
@@ -29,8 +30,10 @@ class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
 
     override fun preparePlayer() {
         playerData.resetPlayerData()
-        if (prepareDone() != TaskResult.FINISHED_TASK) return endGame()
-        player.teleportAsync(world.spawnPoint()).thenAccept { startGame() }
+        world.teleportToSpawnPoint(player).thenAccept {
+            if (prepareDone() != TaskResult.FINISHED_TASK) endGame()
+            else startGame()
+        }
     }
 
     override fun startGame() {
@@ -47,25 +50,24 @@ class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
             },
             // end the game when it's over
             onTimeout = {
-                playerData.resetPlayerToSnapshot().thenAccept {
-                    materialTrackingListener?.unregister()
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("You mined <green>${blocksMined}</green> <brown>dirt</brown> blocks",
-                            TagResolver.resolver("brown", Tag.styling(TextColor.color(0x8B4513)))))
-                    endGame()
-                }
+                player.sendMessage(MiniMessage.miniMessage().deserialize("You mined <green>${blocksMined}</green> <brown>dirt</brown> blocks",
+                        TagResolver.resolver("brown", Tag.styling(TextColor.color(0x8B4513)))))
+                endGame()
             }
         )
     }
 
     override fun endGame() {
-        world.delete()
-        gameState = GameState.OVER
+        materialTrackingListener?.unregister()
+        tickingCountdown?.cancel()
+        playerData.resetPlayerToSnapshot().thenAccept {
+            world.delete()
+            gameState = GameState.OVER
+            Minigames.activeGames.remove(player)
+        }
     }
 
     override fun onPlayerLogout() {
-        playerData.resetPlayerToSnapshot().join()
-        materialTrackingListener?.unregister()
-        tickingCountdown?.cancel()
         endGame()
     }
 

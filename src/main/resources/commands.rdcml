@@ -2,3 +2,8 @@ startgame,sg game:game {
     hook startgame
     user player
 }
+
+debug debugtype:debugtype {
+    hook debug
+    user player
+}
