@@ -1,7 +1,6 @@
 package dev.u9g.minigames.games.listeners
 
 import dev.u9g.minigames.Minigames
-import dev.u9g.minigames.util.EventListener
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent

@@ -1,5 +1,6 @@
 package dev.u9g.minigames
 
+import com.destroystokyo.paper.MaterialSetTag
 import com.destroystokyo.paper.event.server.ServerExceptionEvent
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Multimap
@@ -9,23 +10,29 @@ import dev.u9g.minigames.games.Game
 import dev.u9g.minigames.games.GameType
 import dev.u9g.minigames.games.gathering.GatheringWorldListeners
 import dev.u9g.minigames.games.gathering.gamemodifiers.*
-import dev.u9g.minigames.games.gathering.itemmodifiers.AppliableItemManager
-import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.appliables.SnowballAppliable
-import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.appliables.SugarcaneAppliable
-import dev.u9g.minigames.games.listeners.DontSaveWorldListener
-import dev.u9g.minigames.games.listeners.HidePlayerAdvancementsListener
-import dev.u9g.minigames.games.listeners.MakePickaxeLoreListener
-import dev.u9g.minigames.games.listeners.PlayerDisconnectListener
+import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.AppliableItemManager
+import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.appliables.*
+import dev.u9g.minigames.games.listeners.*
 import dev.u9g.minigames.util.EventListener
 import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import org.bukkit.Bukkit
+import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.inventory.RecipeChoice
+import org.bukkit.inventory.ShapedRecipe
+import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.plugin.java.JavaPlugin
 import redempt.redlib.commandmanager.ArgType
 import redempt.redlib.commandmanager.CommandHook
 import redempt.redlib.commandmanager.CommandParser
+import java.io.IOException
+import java.util.*
+import java.util.logging.Level
+import java.util.logging.Logger
 
 class Minigames : JavaPlugin(), Listener {
     override fun onEnable() {
@@ -34,8 +41,6 @@ class Minigames : JavaPlugin(), Listener {
             map[theGame.gameName] = theGame
             map
         }
-
-        val debugSwitches: Multimap<DebugSwitchType, Player> = HashMultimap.create()
 
         CommandParser(this.getResource("commands.rdcml")).setArgTypes(
             ArgType.of("game", games),
@@ -67,19 +72,39 @@ class Minigames : JavaPlugin(), Listener {
         }
 
         GatheringWorldListeners.start()
-        DebugListener.start(debugSwitches)
+        DebugListener.start()
+        appliableItemManager = AppliableItemManager(listOf(
+                SugarcaneAppliable(),
+                FlintAppliable(),
+                CopperAppliable(),
+                FeatherAppliable(),
+                SoulsandAppliable(),
+                RedstoneAppliable(),
+        ))
+
         listOf(
                 ManyBlockBreakListener(),
                 TreefellerListener(),
                 FastCookListener(),
                 HidePlayerAdvancementsListener(),
-                AppliableItemManager(listOf(SugarcaneAppliable(), SnowballAppliable())),
+                appliableItemManager!!,
                 PlayerDisconnectListener(),
                 EfficiencyGivingListener(),
                 SharpnessGivingListener(),
                 DontSaveWorldListener(),
-                MakePickaxeLoreListener()
+                MakePickaxeLoreListener(),
+                SwimListener(),
+                FortressLocaterListener(),
+                CommandListener(),
+                FortuneDisablerListener(),
+                LootingDisablerListener(),
+                LootGenerateLoreRemakerListener(),
+                SingleUseCraftingTableListener()
         ).forEach { Bukkit.getPluginManager().registerEvents(it, this) }
+
+//        EventListener(PlayerJoinEvent::class.java) {
+//            it.player.sendMessage("Find a <aqua><lang:${Material.CHIPPED_ANVIL.translationKey()}></aqua> as quick as you can!".mm())
+//        }
     }
 
     override fun onDisable() {
@@ -94,5 +119,7 @@ class Minigames : JavaPlugin(), Listener {
 
     companion object {
         val activeGames = mutableMapOf<Player, Game>()
+        var appliableItemManager: AppliableItemManager? = null
+        val debugSwitches: Multimap<DebugSwitchType, Player> = HashMultimap.create()
     }
 }

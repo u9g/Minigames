@@ -4,6 +4,7 @@ import com.destroystokyo.paper.MaterialTags
 import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.util.contains
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -23,11 +24,15 @@ class ManyBlockBreakListener : Listener {
             return
         } else if (item.type in MaterialTags.PICKAXES) {
             val locOne = loc.clone().subtract(0.0, 1.0, 0.0)
-            brokenByBreakBlock.add(locOne)
-            event.player.breakBlock(locOne.block)
+            if (locOne.block.type.hardness > 0f) {
+                brokenByBreakBlock.add(locOne)
+                event.player.breakBlock(locOne.block)
+            }
             val locTwo = loc.clone().subtract(0.0, 2.0, 0.0)
-            brokenByBreakBlock.add(locTwo)
-            event.player.breakBlock(locTwo.block)
+            if (locTwo.block.type.hardness > 0f) {
+                brokenByBreakBlock.add(locTwo)
+                event.player.breakBlock(locTwo.block)
+            }
         }
     }
 }

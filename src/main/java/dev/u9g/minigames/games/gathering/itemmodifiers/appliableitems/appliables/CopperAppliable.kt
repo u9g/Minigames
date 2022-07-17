@@ -5,10 +5,9 @@ import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.PrebuiltAp
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 
-class SugarcaneAppliable : PrebuiltAppliable.EnchantmentAppliable(
+class CopperAppliable : PrebuiltAppliable.EnchantmentAppliable(
         mainItem = MaterialTags.PICKAXES,
-        materialToAddMore = Material.SUGAR_CANE,
+        materialToAddMore = Material.COPPER_INGOT,
         maxLevel = 3,
-        enchantment = Enchantment.DURABILITY,
-        materialColor = "yellow"
-)
+        enchantment = Enchantment.LOOT_BONUS_BLOCKS,
+        materialColor = "gold")

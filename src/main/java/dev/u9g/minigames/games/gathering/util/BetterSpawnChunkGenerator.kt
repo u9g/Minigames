@@ -1,7 +1,5 @@
 package dev.u9g.minigames.games.gathering.util
 
-import dev.u9g.minigames.util.mm
-import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.generator.ChunkGenerator

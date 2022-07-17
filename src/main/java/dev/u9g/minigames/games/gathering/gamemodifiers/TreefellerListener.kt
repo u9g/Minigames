@@ -2,7 +2,6 @@ package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import com.destroystokyo.paper.MaterialSetTag
 import dev.u9g.minigames.Minigames
-import dev.u9g.minigames.games.gathering.GatheringWorldListeners
 import dev.u9g.minigames.util.contains
 import dev.u9g.minigames.util.runSync
 import org.bukkit.NamespacedKey

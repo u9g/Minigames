@@ -1,18 +1,19 @@
-package dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.appliables
+package dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.appliables.unused
 
 import com.destroystokyo.paper.MaterialSetTag
 import com.destroystokyo.paper.MaterialTags
 import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.AmountOfItemsToUse
 import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.AppliableItem
-import dev.u9g.minigames.games.gathering.level
+import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.PrebuiltAppliable
+import dev.u9g.minigames.util.toSetTag
+import net.kyori.adventure.text.Component
 import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.Damageable
 
-val snowballTag = MaterialSetTag(NamespacedKey.fromString("minigames:snowball")).add(Material.SNOWBALL)
+private val snowballTag = Material.SNOWBALL.toSetTag()
+private val loreMaker = PrebuiltAppliable.OnLore.Unlimited.custom("Durability", "durability", "5%", Material.SNOWBALL, "white")
 
 class SnowballAppliable(override val mainItem: MaterialSetTag = MaterialTags.PICKAXES,
                          override val appliedItem: MaterialSetTag = snowballTag)
@@ -34,4 +35,8 @@ class SnowballAppliable(override val mainItem: MaterialSetTag = MaterialTags.PIC
             snowball.amount -= maxUsable
         }
     }
+
+    override fun loreToAdd(item: ItemStack): List<Component> = loreMaker(item)
+
+    override fun enchantLoreToAdd(item: ItemStack): List<Component> = emptyList()
 }

@@ -1,5 +1,6 @@
 package dev.u9g.minigames.games.gathering.util
 
+import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
@@ -19,9 +20,11 @@ class PlayerData(private val player: Player) {
 
     fun resetPlayerToSnapshot(): CompletableFuture<Unit> {
         val cf = CompletableFuture<Unit>()
-        player.teleportAsync(location).thenAccept {
-            if (!it) {
-                throw Error("Player failed to teleport for some reason")
+        player.sliver_teleportAsync(location).thenAccept {
+            if (!it.isSuccessful) {
+                val err = Exception("Player failed to teleport due to ${it.name}")
+                err.sendToOps()
+                err.printStackTrace()
             }
             exp.restoreData()
             inv.restoreData()
@@ -38,14 +41,17 @@ private interface Data {
 }
 
 private class ExperienceData(val player: Player): Data {
-    private val xp = player.totalExperience
+    private val lvl = player.level
+    private val xp = player.exp
 
     override fun restoreData() {
-        player.totalExperience = xp
+        player.level = lvl
+        player.exp = xp
     }
 
     override fun clearData() {
-        player.totalExperience = 0
+        player.level = 0
+        player.exp = 0.0f
     }
 }
 
@@ -75,12 +81,16 @@ private class HealthData(val player: Player): Data {
     private val food = player.foodLevel
     private val saturation = player.saturation
     private val potions = player.activePotionEffects.map { it.serialize() }
+    private val fireTicks = player.fireTicks
+    private val invulnerable = player.isInvulnerable
 
     override fun restoreData() {
         player.health = health
         player.foodLevel = food
         player.saturation = saturation
         potions.map { PotionEffect(it) }.forEach { player.addPotionEffect(it) }
+        player.fireTicks = fireTicks
+        player.isInvulnerable = invulnerable
     }
 
     override fun clearData() {
@@ -88,5 +98,7 @@ private class HealthData(val player: Player): Data {
         player.foodLevel = 20
         player.saturation = 5.0f
         player.activePotionEffects.forEach { player.removePotionEffect(it.type) }
+        player.fireTicks = 0
+        player.isInvulnerable = false
     }
 }

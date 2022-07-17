@@ -1,14 +1,12 @@
 package dev.u9g.minigames.util.infodisplay
 
-import dev.u9g.minigames.util.draw
 import dev.u9g.minigames.makeItem
+import dev.u9g.minigames.util.TickingCountdown
+import dev.u9g.minigames.util.draw
 import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.times
-import dev.u9g.minigames.util.TickingCountdown
-import io.papermc.paper.text.PaperComponents
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
-import net.md_5.bungee.chat.TextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -24,14 +22,14 @@ import java.util.concurrent.CompletableFuture
 
 const val EMERALD_HEAD_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWM5MDZkNjg4ZTY1ODAyNTY5ZDk3MDViNTc5YmNlNTZlZGM4NmVhNWMzNmJkZDZkNmZjMzU1MTZhNzdkNCJ9fX0="
 
-val fillerItem = makeItem(material = Material.WHITE_STAINED_GLASS_PANE)
+val fillerItem = makeItem(material = Material.WHITE_STAINED_GLASS_PANE, name = " ".mm())
 
 class InfoDisplay(gameName: Component,
                   helpLore: List<Component>,
                   player: Player,
                   defaultBackgroundStackSize: Int,
                   private val onClosedByPlayer: () -> Unit){
-    private val head = makeItem(material = Material.PLAYER_HEAD, headTexture = EMERALD_HEAD_TEXTURE, name = "<gradient:aqua:red>Game Info".mm(), lore = helpLore)
+    private val head = makeItem(material = Material.PLAYER_HEAD, headTexture = EMERALD_HEAD_TEXTURE, name = "<gradient:green:blue>Game Info".mm(), lore = helpLore)
     private val inventory = Bukkit.createInventory(null, 27, gameName)
     private val gui = InventoryGUI(inventory)
 
@@ -81,16 +79,14 @@ fun showInfoForSeconds(gameName: String, helpLore: List<Component>, player: Play
     return cf
 }
 
-fun showInfoUntilCallbackCalled(gameName: Component, helpLore: List<Component>, player: Player): () -> TaskResult {
-    var result = TaskResult.FINISHED_TASK
-    // TODO: Don't
-    val disp = InfoDisplay(PlainTextComponentSerializer.plainText().serialize(gameName).mm(), helpLore, player, 1) {
-        result = TaskResult.LEFT_TASK
+class ShowInfoUntilCallbackCalled(gameName: Component, helpLore: List<Component>, player: Player) {
+    var status = TaskResult.FINISHED_TASK
+    private val disp = InfoDisplay(PlainTextComponentSerializer.plainText().serialize(gameName).mm(), helpLore, player, 1) {
+        status = TaskResult.LEFT_TASK
     }
 
-    return {
+    fun close() {
         disp.destroy()
-        result
     }
 }
 

@@ -3,10 +3,10 @@ package dev.u9g.minigames.games
 import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.GameState
-import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.Task
 import dev.u9g.minigames.util.infodisplay.TaskResult
 import dev.u9g.minigames.util.infodisplay.showInfoForSeconds
+import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import net.kyori.adventure.util.Ticks
 import org.bukkit.Bukkit

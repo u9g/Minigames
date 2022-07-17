@@ -5,10 +5,10 @@ import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.PrebuiltAp
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 
-class SugarcaneAppliable : PrebuiltAppliable.EnchantmentAppliable(
-        mainItem = MaterialTags.PICKAXES,
-        materialToAddMore = Material.SUGAR_CANE,
-        maxLevel = 3,
-        enchantment = Enchantment.DURABILITY,
-        materialColor = "yellow"
+class SoulsandAppliable : PrebuiltAppliable.EnchantmentAppliable(
+        mainItem = MaterialTags.BOOTS,
+        materialToAddMore = Material.SOUL_SAND,
+        maxLevel = 1,
+        enchantment = Enchantment.SOUL_SPEED,
+        materialColor = "color:#9f6934"
 )

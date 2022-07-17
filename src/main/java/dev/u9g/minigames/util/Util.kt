@@ -4,12 +4,13 @@ import com.destroystokyo.paper.MaterialSetTag
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.block.Block
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
-import java.io.File
+import java.util.*
 
 fun String.mm() = MiniMessage.miniMessage().deserialize(this)
 
@@ -51,3 +52,30 @@ fun runSync (cb: () -> Unit) = Task.syncDelayed { cb() }
 operator fun MaterialSetTag.contains(material: Material?): Boolean = material?.let { this.isTagged(it) } ?: false
 operator fun MaterialSetTag.contains(item: ItemStack?): Boolean = item?.let { this.isTagged(it) } ?: false
 operator fun MaterialSetTag.contains(item: Block?): Boolean = item?.let { this.isTagged(it) } ?: false
+
+private val numbers = linkedMapOf(
+        1000 to "M",
+        900 to "CM",
+        500 to "D",
+        400 to "CD",
+        100 to "C",
+        90 to "XC",
+        50 to "L",
+        40 to "XL",
+        10 to "X",
+        9 to "IX",
+        5 to "V",
+        4 to "IV",
+        1 to "I"
+)
+
+fun convertToRoman(number: Int): String {
+    for (i in numbers.keys){
+        if (number >= i) {
+            return numbers[i] + convertToRoman(number - i)
+        }
+    }
+    return ""
+}
+
+fun Material.toSetTag() = MaterialSetTag(NamespacedKey.fromString("minigames:${this.name.lowercase(Locale.getDefault())}")).add(this)

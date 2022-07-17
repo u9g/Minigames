@@ -62,6 +62,7 @@ fun makeItem(material: Material,
                 is String -> NBTUtil.set(itemMeta, k, v)
                 is Long -> NBTUtil.set(itemMeta, k, v)
                 is Boolean -> NBTUtil.set(itemMeta, k, v)
+                is Byte -> NBTUtil.set(itemMeta, k, v == 1.toByte())
                 else -> throw IllegalArgumentException("Unexpected type for key: $k")
             }
     } }

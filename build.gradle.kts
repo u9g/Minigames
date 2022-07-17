@@ -15,12 +15,14 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://maven.u9g.dev")
+    mavenLocal()
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
+//    compileOnly("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
+    compileOnly("dev.u9g:sliver-api:1.18.2-R0.1-SNAPSHOT")
     implementation(kotlin("stdlib-jdk8"))
-    implementation("dev.u9g:U9GUtils:1.1.0")
+    implementation("dev.u9g:U9GUtils:1.1.1")
     implementation("com.github.Redempt:RedLib:6.5.2")
     implementation(kotlin("reflect"))
 }
@@ -48,6 +50,7 @@ tasks {
     }
     runServer {
         minecraftVersion.set("1.18.2")
+        serverJar.set(File("server/sliver-bundler-1.18.2-R0.1-SNAPSHOT-reobf.jar"))
     }
 }
 

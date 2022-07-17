@@ -5,10 +5,10 @@ import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.PrebuiltAp
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 
-class SugarcaneAppliable : PrebuiltAppliable.EnchantmentAppliable(
-        mainItem = MaterialTags.PICKAXES,
-        materialToAddMore = Material.SUGAR_CANE,
-        maxLevel = 3,
-        enchantment = Enchantment.DURABILITY,
-        materialColor = "yellow"
+class FlintAppliable : PrebuiltAppliable.EnchantmentAppliable(
+        mainItem = MaterialTags.SWORDS,
+        materialToAddMore = Material.FLINT,
+        maxLevel = 2,
+        enchantment = Enchantment.FIRE_ASPECT,
+        materialColor = "white"
 )

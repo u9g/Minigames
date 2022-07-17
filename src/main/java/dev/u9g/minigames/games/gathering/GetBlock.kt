@@ -4,8 +4,8 @@ import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.util.EventListener
 import dev.u9g.minigames.util.GameState
 import dev.u9g.minigames.util.Task
+import dev.u9g.minigames.util.infodisplay.ShowInfoUntilCallbackCalled
 import dev.u9g.minigames.util.infodisplay.TaskResult
-import dev.u9g.minigames.util.infodisplay.showInfoUntilCallbackCalled
 import dev.u9g.minigames.util.mm
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -21,16 +21,21 @@ private const val R = "<red>"
 private const val A = "<aqua>"
 private const val G = "<green>"
 
-private val a = listOf(
-        Material.JUKEBOX,
-        Material.ENCHANTING_TABLE,
-        Material.ENDER_CHEST,
-        Material.CHIPPED_ANVIL
-).random()
+//private val a = listOf(
+//        Material.JUKEBOX,
+//        Material.ENCHANTING_TABLE,
+//        Material.ENDER_CHEST,
+//        Material.CHIPPED_ANVIL
+//).random()
 
 class GetBlock(private val player: Player) : AbstractWorldGame(player) {
-    private val materialWanted = a
-    private var prepareDone: () -> TaskResult = showInfoUntilCallbackCalled("<gray><bold><u>Find a <white><lang:${materialWanted.translationKey()}></white> as quickly as you can!".mm(), listOf(
+    private val materialWanted = listOf(
+            Material.JUKEBOX,
+            Material.ENCHANTING_TABLE,
+            Material.ENDER_CHEST,
+            Material.CHIPPED_ANVIL
+    ).random()
+    private var infoWindow = ShowInfoUntilCallbackCalled("<gray><bold><u>Find a <white><lang:${materialWanted.translationKey()}></white> as quickly as you can!".mm(), listOf(
             "$P$STAR Every 10 seconds you are in water,".mm(),
             "${P}you gain a level of dolphins grace. (up to 3)".mm(),
             "$R$STAR Any block of wood broken".mm(),
@@ -53,8 +58,12 @@ class GetBlock(private val player: Player) : AbstractWorldGame(player) {
 
     override fun preparePlayer() {
         playerData.resetPlayerData()
-        if (prepareDone() != TaskResult.FINISHED_TASK) return endGame()
-        world.teleportToSpawnPoint(player).thenAccept { startGame() }
+        val status = infoWindow.status
+        if (status != TaskResult.FINISHED_TASK) return endGame()
+        world.teleportToSpawnPoint(player).thenAccept {
+            startGame()
+            infoWindow.close()
+        }
     }
 
     override fun startGame() {
@@ -68,12 +77,14 @@ class GetBlock(private val player: Player) : AbstractWorldGame(player) {
                 }
             }
         }
+        player.sendMessage("<gray>You can use <white>/findnewbiome</white> for a second chance!".mm())
         listeners.add(EventListener(InventoryClickEvent::class.java) {
             checkForMaterialWanted(it.whoClicked)
         }.filter { it.whoClicked == player })
         listeners.add(EventListener(InventoryDragEvent::class.java) {
             checkForMaterialWanted(it.whoClicked)
         }.filter { it.whoClicked == player })
+        // pickup item too
         listeners.add(EventListener(PlayerDeathEvent::class.java) {
             internalEndGame(GameResult.DIED)
             it.isCancelled = true
