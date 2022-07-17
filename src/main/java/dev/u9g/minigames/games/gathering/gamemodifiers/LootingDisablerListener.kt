@@ -16,19 +16,12 @@ class LootingDisablerListener : Listener {
     @EventHandler
     fun onEntityDeath(event: EntityDeathEvent) {
         val mob = event.entity
-        if (mob.world.name.startsWith(GATHERING_WORLD_PREFIX) &&
-                mob.type in DONT_LOOTING_ENTITIES &&
-                mob is Mob) {
-            val killer = event.entity.killer
-            if (killer is Player) {
-                val ctx = LootContext.Builder(event.entity.location).lootedEntity(event.entity).lootingModifier(0).killer(killer)
-                event.drops.clear()
-                mob.lootTable
-                        ?.populateLoot(ThreadLocalRandom.current(), ctx.build())
-                        ?.let {
-                    event.drops.addAll(it)
-                }
-            }
-        }
+        if (!mob.world.name.startsWith(GATHERING_WORLD_PREFIX)) return
+        if (mob.type !in DONT_LOOTING_ENTITIES || mob !is Mob) return
+        val killer = event.entity.killer ?: return
+        val lootContext = LootContext.Builder(event.entity.location).lootedEntity(event.entity).lootingModifier(0).killer(killer)
+        val loot = mob.lootTable?.populateLoot(ThreadLocalRandom.current(), lootContext.build()) ?: return
+        event.drops.clear()
+        event.drops.addAll(loot)
     }
 }
