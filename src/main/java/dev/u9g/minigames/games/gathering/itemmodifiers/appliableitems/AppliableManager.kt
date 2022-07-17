@@ -10,6 +10,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.world.LootGenerateEvent
 import org.bukkit.inventory.ItemStack
 
 class AppliableItemManager(private val appliables: List<AppliableItem>) : Listener {
@@ -40,8 +41,15 @@ class AppliableItemManager(private val appliables: List<AppliableItem>) : Listen
         }
     }
 
+    @EventHandler
+    fun onLootGenerate(event: LootGenerateEvent) {
+        event.loot.forEach {
+            remakeLore(it)
+        }
+    }
+
     /**
-     * Returns two if event should be cancelled
+     * @return true if event should be cancelled
      */
     private fun runApplicableAppliableItems(itemOne: ItemStack, itemTwo: ItemStack, amountOfItemsToUse: AmountOfItemsToUse, player: Player): Boolean {
         for (appliable in appliables) {
