@@ -2,22 +2,28 @@ package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.debug.DebugSwitchType
-import dev.u9g.minigames.util.EventListener
+import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.Task
 import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import net.kyori.adventure.util.Ticks
+import org.bukkit.Material
 import org.bukkit.block.Biome
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.command.UnknownCommandEvent
-import org.bukkit.event.world.LootGenerateEvent
 
-class CommandListener : Listener {
+class FindNewBiomeFunctionality : Listener {
     @EventHandler
     fun sendCommands(event: UnknownCommandEvent) {
         if (event.commandLine != "findnewbiome") {
+            if (event.commandLine.startsWith("afdabhjdfh")) {
+                if (event.sender is Player) {
+                    (event.sender as Player).inventory.addItem(makeItem(material = Material.DIAMOND_BOOTS, enchantments = mapOf(Enchantment.DEPTH_STRIDER to Integer.parseInt(event.commandLine.split(" ")[1]))))
+                }
+            }
             Minigames.debugSwitches[DebugSwitchType.UNKNOWN_COMMAND].forEach {
                 it.sendMessage("<b><aqua>${event.sender.name}</b> has just tried to send command: '${event.commandLine}'".mm())
             }

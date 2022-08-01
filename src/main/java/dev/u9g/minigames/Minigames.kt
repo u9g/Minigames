@@ -1,6 +1,5 @@
 package dev.u9g.minigames
 
-import com.destroystokyo.paper.MaterialSetTag
 import com.destroystokyo.paper.event.server.ServerExceptionEvent
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Multimap
@@ -16,45 +15,26 @@ import dev.u9g.minigames.games.listeners.*
 import dev.u9g.minigames.util.EventListener
 import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
+import net.megavex.scoreboardlibrary.ScoreboardLibraryImplementation
+import net.megavex.scoreboardlibrary.api.ScoreboardManager
 import org.bukkit.Bukkit
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.inventory.RecipeChoice
-import org.bukkit.inventory.ShapedRecipe
-import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.plugin.java.JavaPlugin
 import redempt.redlib.commandmanager.ArgType
 import redempt.redlib.commandmanager.CommandHook
 import redempt.redlib.commandmanager.CommandParser
-import java.io.IOException
-import java.util.*
-import java.util.logging.Level
-import java.util.logging.Logger
 
 class Minigames : JavaPlugin(), Listener {
     override fun onEnable() {
-
-        val games = GameType.values().fold(mutableMapOf<String, GameType>()) { map, theGame ->
-            map[theGame.gameName] = theGame
-            map
-        }
+        ScoreboardLibraryImplementation.init()
+        scoreboardManager = ScoreboardManager.scoreboardManager(this)
 
         CommandParser(this.getResource("commands.rdcml")).setArgTypes(
-            ArgType.of("game", games),
-            ArgType.of("debugtype", DebugSwitchType.values().associateWith { it.name }.toMutableMap().entries.associate { (k,v) -> v to k })
+            ArgType.of("game", GameType.values().associateBy { it.gameName }),
+            ArgType.of("debugtype", DebugSwitchType.values().associateBy { it.name }),
+            ArgType.of("queablegame", QueueableGameType.values().associateBy { it.gameName })
         ).parse().register("minigames", object {
-            @CommandHook("startgame")
-            fun startGame(player: Player, game: GameType) {
-                if (player in activeGames) {
-                    player.sendMessage("You're already in a game :(".mm())
-                } else {
-                    activeGames[player] = game.start(player)
-                }
-            }
-
             @CommandHook("debug")
             fun debug(player: Player, debugSwitchType: DebugSwitchType) {
                 val list = debugSwitches[debugSwitchType]
@@ -64,6 +44,25 @@ class Minigames : JavaPlugin(), Listener {
                     list.add(player)
                 }
                 player.sendMessage("<gray>[</gray><red><bold>DEBUG</red><gray>]</gray> You are ${if (player in list)"<green>now</green>" else "<red>no longer</red>"} receiving notifications for <aqua>$debugSwitchType".mm())
+            }
+
+            @CommandHook("startgame")
+            fun startGame(player: Player, game: GameType) {
+                if (player in activeGames) {
+                    player.sendMessage("You're already in a game :(".mm())
+                } else {
+                    activeGames[player] = game.start(player)
+                }
+            }
+
+            @CommandHook("queuegame")
+            fun queueGame(player: Player, game: QueueableGameType) {
+                if (player in activeGames) {
+                    player.sendMessage("You're already in a game :(".mm())
+                } else {
+                    QueueableGameStarter(("<aqua><b>"+game.gameName).mm(), game).startQueue()
+//                    activeGames[player] = game.start(player)
+                }
             }
         })
 
@@ -95,11 +94,12 @@ class Minigames : JavaPlugin(), Listener {
                 MakePickaxeLoreListener(),
                 SwimListener(),
                 FortressLocaterListener(),
-                CommandListener(),
+                FindNewBiomeFunctionality(),
                 FortuneDisablerListener(),
                 LootingDisablerListener(),
-                LootGenerateLoreRemakerListener(),
-                SingleUseCraftingTableListener()
+                SingleUseCraftingTableListener(),
+                GrapplingHookListener(),
+                PlayerEquipHeadListener()
         ).forEach { Bukkit.getPluginManager().registerEvents(it, this) }
 
 //        EventListener(PlayerJoinEvent::class.java) {
@@ -108,6 +108,8 @@ class Minigames : JavaPlugin(), Listener {
     }
 
     override fun onDisable() {
+        scoreboardManager.close()
+        ScoreboardLibraryImplementation.close()
 //        for (game in activeGames.values) {
 //            when (game) {
 //                is AbstractWorldGame -> {
@@ -121,5 +123,7 @@ class Minigames : JavaPlugin(), Listener {
         val activeGames = mutableMapOf<Player, Game>()
         var appliableItemManager: AppliableItemManager? = null
         val debugSwitches: Multimap<DebugSwitchType, Player> = HashMultimap.create()
+        lateinit var scoreboardManager: ScoreboardManager
     }
 }
+

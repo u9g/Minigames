@@ -1,8 +1,10 @@
 package dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems
 
 import dev.u9g.minigames.Minigames
+import dev.u9g.minigames.debug.DebugSwitchType
 import dev.u9g.minigames.games.gathering.itemmodifiers.remakeLore
 import dev.u9g.minigames.util.contains
+import dev.u9g.minigames.util.mm
 import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -16,9 +18,19 @@ import org.bukkit.inventory.ItemStack
 class AppliableItemManager(private val appliables: List<AppliableItem>) : Listener {
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
-        if (event.whoClicked !in Minigames.activeGames ) return
+        if (event.whoClicked !in Minigames.activeGames) {
+            if (Minigames.debugSwitches[DebugSwitchType.APPLIABLE_ITEM].contains(event.whoClicked)) {
+                // stage 1
+                (event.whoClicked as Player).sendMessage("<gray>[</gray><green>Appliable Item Debug</green><gray>]</gray><light_purple>Failed at Stage 1".mm())
+            }
+            return
+        }
 
         if (event.whoClicked !is Player) {
+            if (Minigames.debugSwitches[DebugSwitchType.APPLIABLE_ITEM].contains(event.whoClicked)) {
+                // stage 2
+                (event.whoClicked as Player).sendMessage("<gray>[</gray><green>Appliable Item Debug</green><gray>]</gray><light_purple>Failed at Stage 2".mm())
+            }
             throw Error("InventoryClickEvent called with nonplayer")
         }
         if (event.action == InventoryAction.SWAP_WITH_CURSOR || // in inventory
@@ -37,6 +49,11 @@ class AppliableItemManager(private val appliables: List<AppliableItem>) : Listen
                     event.whoClicked as Player)
             if (foundMatchingAppliable) {
                 event.isCancelled = true
+            }
+        } else {
+            if (Minigames.debugSwitches[DebugSwitchType.APPLIABLE_ITEM].contains(event.whoClicked)) {
+                // stage 3
+                (event.whoClicked as Player).sendMessage("<gray>[</gray><green>Appliable Item Debug</green><gray>]</gray><light_purple>Failed at Stage 3".mm())
             }
         }
     }

@@ -10,6 +10,6 @@ class PlayerDisconnectListener : Listener {
     fun onDisconnect(event: PlayerQuitEvent) {
         if (event.player !in Minigames.activeGames) return
 
-        Minigames.activeGames[event.player]?.onPlayerLogout()
+//        Minigames.activeGames[event.player]?.onPlayerLogout()
     }
 }

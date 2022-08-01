@@ -24,12 +24,12 @@ class ManyBlockBreakListener : Listener {
             return
         } else if (item.type in MaterialTags.PICKAXES) {
             val locOne = loc.clone().subtract(0.0, 1.0, 0.0)
-            if (locOne.block.type.hardness > 0f) {
+            if (locOne.block.type.hardness > 0f && locOne.block.type.hardness != 100f) {
                 brokenByBreakBlock.add(locOne)
                 event.player.breakBlock(locOne.block)
             }
             val locTwo = loc.clone().subtract(0.0, 2.0, 0.0)
-            if (locTwo.block.type.hardness > 0f) {
+            if (locTwo.block.type.hardness > 0f && locOne.block.type.hardness != 100f) {
                 brokenByBreakBlock.add(locTwo)
                 event.player.breakBlock(locTwo.block)
             }

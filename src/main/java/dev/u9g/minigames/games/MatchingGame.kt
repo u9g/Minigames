@@ -4,8 +4,8 @@ import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.GameState
 import dev.u9g.minigames.util.Task
+import dev.u9g.minigames.util.infodisplay.InfoDisplayer
 import dev.u9g.minigames.util.infodisplay.TaskResult
-import dev.u9g.minigames.util.infodisplay.showInfoForSeconds
 import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import net.kyori.adventure.util.Ticks
@@ -153,7 +153,7 @@ class MatchingGame (private val player: Player) : Game {
 
     override fun begin() {
         // TODO: Make Player -> Game Map
-        showInfoForSeconds("Matching", GAME_INFO_LORE, player)
+        InfoDisplayer.autoclosingDisplay("Matching".mm(), GAME_INFO_LORE, player)
             .thenAccept {
                 when (it) {
                     TaskResult.FINISHED_TASK -> {
@@ -169,7 +169,7 @@ class MatchingGame (private val player: Player) : Game {
             .whenComplete { _, err -> err?.sendToOps() }
     }
 
-    override fun onPlayerLogout() {
+    fun onPlayerLogout() {
         TODO("Not yet implemented")
     }
 }

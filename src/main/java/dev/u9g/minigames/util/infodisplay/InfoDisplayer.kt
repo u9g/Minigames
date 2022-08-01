@@ -6,7 +6,6 @@ import dev.u9g.minigames.util.draw
 import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.times
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -24,13 +23,14 @@ const val EMERALD_HEAD_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly
 
 val fillerItem = makeItem(material = Material.WHITE_STAINED_GLASS_PANE, name = " ".mm())
 
-class InfoDisplay(gameName: Component,
-                  helpLore: List<Component>,
-                  player: Player,
-                  defaultBackgroundStackSize: Int,
-                  private val onClosedByPlayer: () -> Unit){
+
+class InfoDisplayer private constructor(windowTitle: Component,
+                                        helpLore: List<Component>,
+                                        player: Player,
+                                        defaultBackgroundStackSize: Int,
+                                        private val onClosedByPlayer: () -> Unit){
     private val head = makeItem(material = Material.PLAYER_HEAD, headTexture = EMERALD_HEAD_TEXTURE, name = "<gradient:green:blue>Game Info".mm(), lore = helpLore)
-    private val inventory = Bukkit.createInventory(null, 27, gameName)
+    private val inventory = Bukkit.createInventory(null, 27, windowTitle)
     private val gui = InventoryGUI(inventory)
 
     fun update(backgroundStackSize: Int) {
@@ -56,38 +56,48 @@ class InfoDisplay(gameName: Component,
         gui.destroy()
         gui.inventory.close()
     }
-}
 
-fun showInfoForSeconds(gameName: String, helpLore: List<Component>, player: Player, seconds: Int = 10): CompletableFuture<TaskResult> {
-    val cf = CompletableFuture<TaskResult>()
-    var countdown: TickingCountdown? = null
+    companion object {
+        fun autoclosingDisplay(windowTitle: Component, helpLore: List<Component>, player: Player, seconds: Int = 10): CompletableFuture<TaskResult> {
+            val cf = CompletableFuture<TaskResult>()
+            var countdown: TickingCountdown? = null
 
-    val disp = InfoDisplay(gameName.mm(), helpLore, player, seconds) {
-        countdown?.cancel()
-        cf.complete(TaskResult.LEFT_TASK)
-    }
+            val disp = InfoDisplayer(windowTitle, helpLore, player, seconds) {
+                countdown?.cancel()
+                cf.complete(TaskResult.LEFT_TASK)
+            }
 
-    countdown = TickingCountdown(
-        endAfterSeconds = seconds,
-        onTick = { disp.update(-(it.timesRun-seconds)) },
-        onTimeout = {
-            disp.destroy()
-            cf.complete(TaskResult.FINISHED_TASK)
+            countdown = TickingCountdown(
+                    endAfterSeconds = seconds,
+                    onTick = { disp.update(-(it.timesRun-seconds)) },
+                    onTimeout = {
+                        disp.destroy()
+                        cf.complete(TaskResult.FINISHED_TASK)
+                    }
+            )
+
+            return cf
         }
-    )
 
-    return cf
+        fun closableDisplay(windowTitle: Component, helpLore: List<Component>, player: Player): ClosableInfoDisplay {
+            var status = TaskResult.FINISHED_TASK
+            val disp = InfoDisplayer(windowTitle, helpLore, player, 1) {
+                status = TaskResult.LEFT_TASK
+            }
+
+            return object : ClosableInfoDisplay() {
+                override val status: TaskResult
+                    get() = status
+
+                override fun close() = disp.destroy()
+            }
+        }
+    }
 }
 
-class ShowInfoUntilCallbackCalled(gameName: Component, helpLore: List<Component>, player: Player) {
-    var status = TaskResult.FINISHED_TASK
-    private val disp = InfoDisplay(PlainTextComponentSerializer.plainText().serialize(gameName).mm(), helpLore, player, 1) {
-        status = TaskResult.LEFT_TASK
-    }
-
-    fun close() {
-        disp.destroy()
-    }
+abstract class ClosableInfoDisplay {
+    abstract val status: TaskResult
+    abstract fun close()
 }
 
 enum class TaskResult {

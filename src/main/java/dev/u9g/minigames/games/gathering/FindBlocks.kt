@@ -5,7 +5,7 @@ import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.util.EventListener
 import dev.u9g.minigames.util.GameState
 import dev.u9g.minigames.util.TickingCountdown
-import dev.u9g.minigames.util.infodisplay.ShowInfoUntilCallbackCalled
+import dev.u9g.minigames.util.infodisplay.InfoDisplayer
 import dev.u9g.minigames.util.infodisplay.TaskResult
 import dev.u9g.minigames.util.mm
 import net.kyori.adventure.text.format.TextColor
@@ -16,9 +16,11 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockBreakEvent
 
+val TIME_GIVEN_MINS = 3
+
 class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
     private val materialTracked: Set<Material> = MaterialSetTag.DIRT.values//setOf(Material.SEAGRASS)
-    private var infoWindow = ShowInfoUntilCallbackCalled("findBlocks".mm(), listOf("find as many dirt blocks as you can in 3 minutes".mm()), player)
+    private var infoWindow = InfoDisplayer.closableDisplay("findBlocks".mm(), listOf("find as many dirt blocks as you can in $TIME_GIVEN_MINS minutes".mm()), player)
     private var materialTrackingListener: EventListener<BlockBreakEvent>? = null
     private var tickingCountdown: TickingCountdown? = null
     private var gameState = GameState.STARTING
@@ -47,10 +49,10 @@ class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
             blocksMined++
         }.filter { it.player === player && materialTracked.contains(it.block.type) }
         tickingCountdown = TickingCountdown(
-            endAfterSeconds = 60,
+            endAfterSeconds = TIME_GIVEN_MINS*60,
             // tick the player's counter on their hotbar
             onTick = {
-                player.sendActionBar("<aqua>${-(it.timesRun-60)}</aqua> sec left".mm())
+                player.sendActionBar("<aqua>${-(it.timesRun-(TIME_GIVEN_MINS*60))}</aqua> sec left".mm())
             },
             // end the game when it's over
             onTimeout = {
@@ -71,7 +73,7 @@ class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
         }
     }
 
-    override fun onPlayerLogout() {
+    fun onPlayerLogout() {
         endGame()
     }
 

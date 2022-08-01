@@ -11,15 +11,23 @@ class PlayerData(private val player: Player) {
     private val exp = ExperienceData(player)
     private val inv = InventoryData(player)
     private val hp = HealthData(player)
+    private val recipes = player.discoveredRecipes
+
+    init {
+        player.canPickupItems = false
+    }
 
     fun resetPlayerData() {
         exp.clearData()
         inv.clearData()
         hp.clearData()
+        player.discoverRecipes(recipes)
+        player.canPickupItems = true
     }
 
     fun resetPlayerToSnapshot(): CompletableFuture<Unit> {
         val cf = CompletableFuture<Unit>()
+        player.canPickupItems = false
         player.sliver_teleportAsync(location).thenAccept {
             if (!it.isSuccessful) {
                 val err = Exception("Player failed to teleport due to ${it.name}")
@@ -29,6 +37,8 @@ class PlayerData(private val player: Player) {
             exp.restoreData()
             inv.restoreData()
             hp.restoreData()
+            player.undiscoverRecipes(player.discoveredRecipes)
+            player.canPickupItems = true
             cf.complete(null)
         }
         return cf

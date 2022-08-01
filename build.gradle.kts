@@ -25,6 +25,9 @@ dependencies {
     implementation("dev.u9g:U9GUtils:1.1.1")
     implementation("com.github.Redempt:RedLib:6.5.2")
     implementation(kotlin("reflect"))
+    implementation("net.megavex.scoreboardlibrary:implementation:1.0.0")
+    implementation("net.megavex.scoreboardlibrary:v1_18_R2:1.0.0")
+    implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.4.0")
 }
 
 java {

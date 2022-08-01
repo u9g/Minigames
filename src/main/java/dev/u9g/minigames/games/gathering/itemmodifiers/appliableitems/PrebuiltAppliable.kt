@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack
 private fun applyItemLine(materialToAddMore: Material, color: String) =
         " <gray>Apply <$color><lang:${materialToAddMore.translationKey()}></$color> to this tool".mm()
 
-private fun getLevel(item: ItemStack, levelKey: NamespacedKey) = NBTUtil.getAsInt(item.itemMeta, levelKey).orElse(0)
+private fun getLevel(item: ItemStack, levelKey: NamespacedKey) = item.itemMeta?.let { NBTUtil.getAsInt(it, levelKey).orElse(0) } ?: 0
 
 typealias Applier = (mainItem: ItemStack, appliedItem: ItemStack, amountOfItemsToUse: AmountOfItemsToUse, player: Player) -> Unit
 typealias LoreMaker = (item: ItemStack) -> List<Component>

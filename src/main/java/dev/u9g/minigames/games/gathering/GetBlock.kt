@@ -4,7 +4,7 @@ import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.util.EventListener
 import dev.u9g.minigames.util.GameState
 import dev.u9g.minigames.util.Task
-import dev.u9g.minigames.util.infodisplay.ShowInfoUntilCallbackCalled
+import dev.u9g.minigames.util.infodisplay.InfoDisplayer
 import dev.u9g.minigames.util.infodisplay.TaskResult
 import dev.u9g.minigames.util.mm
 import org.bukkit.Bukkit
@@ -14,6 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.event.player.PlayerAttemptPickupItemEvent
 
 private const val STAR = "<b>*</b>"
 private const val P = "<light_purple>"
@@ -21,23 +22,30 @@ private const val R = "<red>"
 private const val A = "<aqua>"
 private const val G = "<green>"
 
-//private val a = listOf(
+private val a = listOf(
 //        Material.JUKEBOX,
 //        Material.ENCHANTING_TABLE,
 //        Material.ENDER_CHEST,
-//        Material.CHIPPED_ANVIL
-//).random()
+        Material.NETHER_WART
+).random()
+
+private val UNGETTABLES = listOf(
+        Material.COMMAND_BLOCK,
+        Material.COMMAND_BLOCK_MINECART,
+        Material.CHAIN_COMMAND_BLOCK,
+        Material.REPEATING_COMMAND_BLOCK,
+        Material.DEBUG_STICK,
+        Material.AIR,
+        Material.CAVE_AIR,
+        Material.VOID_AIR,
+        *Material.values().filter { it.name.endsWith("_SPAWN_EGG") || it.name.endsWith("SHULKER_BOX") }.toTypedArray()
+)
 
 class GetBlock(private val player: Player) : AbstractWorldGame(player) {
-    private val materialWanted = listOf(
-            Material.JUKEBOX,
-            Material.ENCHANTING_TABLE,
-            Material.ENDER_CHEST,
-            Material.CHIPPED_ANVIL
-    ).random()
-    private var infoWindow = ShowInfoUntilCallbackCalled("<gray><bold><u>Find a <white><lang:${materialWanted.translationKey()}></white> as quickly as you can!".mm(), listOf(
-            "$P$STAR Every 10 seconds you are in water,".mm(),
-            "${P}you gain a level of dolphins grace. (up to 3)".mm(),
+    private val materialWanted = Material.values().filter { it.isItem }.filter { it !in UNGETTABLES }.random()
+    private var infoWindow = InfoDisplayer.closableDisplay("<gray><bold><u>Find a <white><lang:${materialWanted.translationKey()}></white> as quickly as you can!".mm(), listOf(
+            "$P$STAR After 10 seconds of being in water,".mm(),
+            "${P}you gain a level of dolphins grace.".mm(),
             "$R$STAR Any block of wood broken".mm(),
             "${R}that touches other wood of the same type".mm(),
             "${R}will break them too with the held tool".mm(),
@@ -80,15 +88,17 @@ class GetBlock(private val player: Player) : AbstractWorldGame(player) {
         player.sendMessage("<gray>You can use <white>/findnewbiome</white> for a second chance!".mm())
         listeners.add(EventListener(InventoryClickEvent::class.java) {
             checkForMaterialWanted(it.whoClicked)
-        }.filter { it.whoClicked == player })
+        }.filter { it.whoClicked == player && this.gameState == GameState.IN_PROGRESS })
         listeners.add(EventListener(InventoryDragEvent::class.java) {
             checkForMaterialWanted(it.whoClicked)
-        }.filter { it.whoClicked == player })
-        // pickup item too
+        }.filter { it.whoClicked == player && this.gameState == GameState.IN_PROGRESS })
+        listeners.add(EventListener(PlayerAttemptPickupItemEvent::class.java) {
+            checkForMaterialWanted(it.player)
+        }.filter { it.player == player && this.gameState == GameState.IN_PROGRESS })
         listeners.add(EventListener(PlayerDeathEvent::class.java) {
             internalEndGame(GameResult.DIED)
             it.isCancelled = true
-        }.filter { it.player == player })
+        }.filter { it.player == player && this.gameState == GameState.IN_PROGRESS })
     }
 
     private fun internalEndGame(gameResult: GameResult) {
@@ -112,14 +122,9 @@ class GetBlock(private val player: Player) : AbstractWorldGame(player) {
         Minigames.activeGames.remove(player)
     }
 
-    override fun onPlayerLogout() {
+    fun onPlayerLogout() {
         endGame()
     }
 
     override fun gameState() = gameState
-}
-
-private enum class GameResult {
-    DIED,
-    FOUND_ITEM
 }

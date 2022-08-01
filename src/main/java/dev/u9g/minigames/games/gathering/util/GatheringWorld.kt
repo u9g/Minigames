@@ -5,6 +5,7 @@ import dev.u9g.minigames.util.mm
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
 import net.kyori.adventure.util.Ticks
 import org.bukkit.Bukkit
+import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
@@ -26,10 +27,11 @@ class GatheringWorld {
 
     fun teleportToSpawnPoint(player: Player): CompletableFuture<Unit> {
         val cf = CompletableFuture<Unit>()
-        val nonNullWorld = (world ?: throw Error("called GatheringWorld#spawnPoint with a null world"))
-        val loc = nonNullWorld.getHighestBlockAt(0, 0).location
-        nonNullWorld.getChunkAtAsync(loc, Consumer {
-            player.sliver_teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN).thenAccept {
+        val wrld = (world ?: throw Error("called GatheringWorld#spawnPoint with a null world"))
+        wrld.getChunkAtAsync(0, 0).thenAccept { chunk ->
+            var h = wrld.maxHeight
+            while (chunk.getBlock(0, h--, 0).type.isAir);
+            player.sliver_teleportAsync(Location(wrld, 0.0, (h+1).toDouble(), 0.0)).thenAccept {
                 if (!it.isSuccessful) {
                     val err = Exception("Player failed to teleport due to ${it.name}")
                     err.sendToOps()
@@ -37,7 +39,7 @@ class GatheringWorld {
                 }
                 cf.complete(null)
             }
-        })
+        }
         return cf
     }
 
@@ -47,11 +49,11 @@ class GatheringWorld {
         if (!unloadResult.isSuccessful) {
             Bukkit.broadcast("failed to delete due to: $unloadResult".mm(), "isop.isop")
         } else {
-            println("starting delete")
-            Task.asyncDelayed((Ticks.TICKS_PER_SECOND * 10).toLong()) {
+            println("starting delete of: ${theWorld.name}")
+            Task.asyncDelayed((Ticks.TICKS_PER_SECOND * 5).toLong()) {
                 if (!theWorld.worldFolder.deleteRecursively())
                     Bukkit.broadcast("failed to delete world folder".mm(), "isop.isop")
-                println("done deleting")
+                println("done delete of: ${theWorld.name}")
             }
         }
     }

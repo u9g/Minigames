@@ -25,16 +25,17 @@ class SwimListener : Listener {
             Bukkit.getOnlinePlayers().stream().filter { it in Minigames.activeGames }.forEach { player ->
                 if (Minigames.debugSwitches[DebugSwitchType.SWIM_SPEED].contains(player)) {
                     val playerInWaterColor = if (!player.isInWater) "red" else "green"
-                    val playerInDolphinsGrace = if (!player.isInWater) "red" else "aqua"
+                    val playerInDolphinsGrace = if (!player.isInWater) "red" else "green"
                     Bukkit.broadcast("<$playerInWaterColor>In water?</$playerInWaterColor> | <$playerInDolphinsGrace>Has Dolphins Grace?</$playerInDolphinsGrace> | secInWater: ${secInWater.getOrDefault(player, 0)} | sec out of water: ${secOutOfWater.getOrDefault(player, 0)}".mm())
                 }
                 if (player.isInWater) {
                     val secondsInWater = (secInWater[player] ?: 0) + 1
                     secInWater[player] = secondsInWater
                     secOutOfWater[player] = 0
-                    if ((secondsInWater % 10) == 0 && (secondsInWater / 10) < 3) {
-                        player.addPotionEffect(PotionEffect(DG, 10_000_000, secondsInWater / 10))
-                        player.addPotionEffect(PotionEffect(WB, 10_000_000, secondsInWater / 10))
+                    if (/*(secondsInWater % 10) == 0 && */(secondsInWater / 10) > 0) {
+                        // if you spawn in water it glitches
+                        player.addPotionEffect(PotionEffect(DG, 10_000_000, (secondsInWater / 10).coerceAtMost(0)))
+                        player.addPotionEffect(PotionEffect(WB, 10_000_000, (secondsInWater / 10).coerceAtMost(0)))
                     }
                 } else if (player.hasPotionEffect(DG)) {
                     secOutOfWater[player] = secOutOfWater.getOrDefault(player, 0) + 1
