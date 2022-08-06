@@ -2,7 +2,7 @@ package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import com.destroystokyo.paper.MaterialSetTag
 import com.github.u9g.u9gutils.NBTUtil
-import dev.u9g.minigames.Minigames
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.mm
 import org.bukkit.Bukkit
@@ -19,7 +19,7 @@ val SINGLE_HEAD = NamespacedKey.fromString("minigames:single_use_crafting_table"
 class SingleUseCraftingTableListener : Listener {
     @EventHandler
     fun onRightClickCraftingHead(event: PlayerInteractEvent) {
-        if (event.player !in Minigames.activeGames) return
+        if (!Games.isPlayerInGame(event.player)) return
         if (event.player.inventory.itemInMainHand.itemMeta?.let { NBTUtil.getAsBoolean(it, SINGLE_HEAD).orElse(false) } != true) {
             return
         }

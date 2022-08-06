@@ -1,7 +1,7 @@
 package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import com.destroystokyo.paper.MaterialSetTag
-import dev.u9g.minigames.Minigames
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.util.contains
 import dev.u9g.minigames.util.runSync
 import org.bukkit.NamespacedKey
@@ -16,7 +16,7 @@ private val DIRECTIONS = setOf(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH,
 class TreefellerListener : Listener {
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
-        if (event.player !in Minigames.activeGames) return
+        if (!Games.isPlayerInGame(event.player)) return
 
         if (event.block in LOGS)
             for (direction in DIRECTIONS) {

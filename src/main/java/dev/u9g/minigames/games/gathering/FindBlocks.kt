@@ -1,13 +1,12 @@
 package dev.u9g.minigames.games.gathering
 
 import com.destroystokyo.paper.MaterialSetTag
-import dev.u9g.minigames.Minigames
-import dev.u9g.minigames.util.EventListener
-import dev.u9g.minigames.util.GameState
-import dev.u9g.minigames.util.TickingCountdown
+import com.github.shynixn.mccoroutine.bukkit.launch
+import dev.u9g.minigames.games.Games
+import dev.u9g.minigames.util.*
 import dev.u9g.minigames.util.infodisplay.InfoDisplayer
 import dev.u9g.minigames.util.infodisplay.TaskResult
-import dev.u9g.minigames.util.mm
+import kotlinx.coroutines.future.asDeferred
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.Tag
@@ -25,24 +24,21 @@ class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
     private var tickingCountdown: TickingCountdown? = null
     private var gameState = GameState.STARTING
 
-    override fun begin() = prepareGame()
+    override suspend fun begin() = prepareGame()
 
-    override fun prepareGame() {
+    override suspend fun prepareGame() {
+        // prepare world
         world.makeWorld()
-        preparePlayer()
-    }
-
-    override fun preparePlayer() {
+        // prepare player
         playerData.resetPlayerData()
         val status = infoWindow.status
         if (status != TaskResult.FINISHED_TASK) return endGame()
-        world.teleportToSpawnPoint(player).thenAccept {
-            startGame()
-            infoWindow.close()
-        }
+        world.teleportToSpawnPoint(player)
+        startGame()
+        infoWindow.close()
     }
 
-    override fun startGame() {
+    override suspend fun startGame() {
         gameState = GameState.IN_PROGRESS
         var blocksMined = 0
         materialTrackingListener = EventListener(BlockBreakEvent::class.java) {
@@ -58,23 +54,18 @@ class FindBlocks(private val player: Player) : AbstractWorldGame(player) {
             onTimeout = {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("You mined <green>${blocksMined}</green> <brown>dirt</brown> blocks",
                         TagResolver.resolver("brown", Tag.styling(TextColor.color(0x8B4513)))))
-                endGame()
+                getCallingPlugin().launch { endGame() }
             }
         )
     }
 
-    override fun endGame() {
+    override suspend fun endGame() {
         materialTrackingListener?.unregister()
         tickingCountdown?.cancel()
-        playerData.resetPlayerToSnapshot().thenAccept {
-            world.delete()
-            gameState = GameState.OVER
-            Minigames.activeGames.remove(player)
-        }
-    }
-
-    fun onPlayerLogout() {
-        endGame()
+        playerData.resetPlayerToSnapshot()
+        world.delete()
+        gameState = GameState.OVER
+        Games.leftGame(player)
     }
 
     override fun gameState() = gameState

@@ -1,10 +1,9 @@
 package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import com.destroystokyo.paper.MaterialTags
-import dev.u9g.minigames.Minigames
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.util.contains
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -14,7 +13,7 @@ class ManyBlockBreakListener : Listener {
 
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
-        if (event.player !in Minigames.activeGames ) return
+        if (!Games.isPlayerInGame(event.player)) return
 
         val item = event.player.inventory.itemInMainHand
         val loc = event.block.location

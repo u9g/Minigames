@@ -1,6 +1,7 @@
 package dev.u9g.minigames.games.gathering.util
 
 import dev.u9g.minigames.util.throwablerenderer.sendToOps
+import kotlinx.coroutines.future.asDeferred
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
@@ -25,23 +26,19 @@ class PlayerData(private val player: Player) {
         player.canPickupItems = true
     }
 
-    fun resetPlayerToSnapshot(): CompletableFuture<Unit> {
-        val cf = CompletableFuture<Unit>()
+    suspend fun resetPlayerToSnapshot() {
         player.canPickupItems = false
-        player.sliver_teleportAsync(location).thenAccept {
-            if (!it.isSuccessful) {
-                val err = Exception("Player failed to teleport due to ${it.name}")
-                err.sendToOps()
-                err.printStackTrace()
-            }
-            exp.restoreData()
-            inv.restoreData()
-            hp.restoreData()
-            player.undiscoverRecipes(player.discoveredRecipes)
-            player.canPickupItems = true
-            cf.complete(null)
+        val tpResult = player.sliver_teleportAsync(location).asDeferred().await()
+        if (!tpResult.isSuccessful) {
+            val err = Exception("Player failed to teleport due to ${tpResult.name}")
+            err.sendToOps()
+            err.printStackTrace()
         }
-        return cf
+        exp.restoreData()
+        inv.restoreData()
+        hp.restoreData()
+        player.undiscoverRecipes(player.discoveredRecipes)
+        player.canPickupItems = true
     }
 }
 

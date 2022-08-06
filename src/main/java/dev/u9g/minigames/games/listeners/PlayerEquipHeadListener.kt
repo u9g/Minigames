@@ -1,6 +1,6 @@
 package dev.u9g.minigames.games.listeners
 
-import dev.u9g.minigames.Minigames
+import dev.u9g.minigames.games.Games
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -17,7 +17,7 @@ private val modifyOtherSlotsActions = listOf(
 class PlayerEquipHeadListener : Listener {
     @EventHandler
     fun click(event: InventoryClickEvent) {
-        if (event.whoClicked !in Minigames.activeGames) return
+        if (!Games.isPlayerInGame(event.whoClicked)) return
 
         // TODO: user cant shift click this item now into a chest but I dont care :shrug:
         if ((event.slotType == InventoryType.SlotType.ARMOR && (event.cursor?.type == Material.PLAYER_HEAD || (event.hotbarButton != -1 && event.clickedInventory?.getItem(event.hotbarButton)?.type == Material.PLAYER_HEAD))) ||
@@ -28,7 +28,7 @@ class PlayerEquipHeadListener : Listener {
 
     @EventHandler
     fun drag(event: InventoryDragEvent) {
-        if (event.whoClicked !in Minigames.activeGames) return
+        if (!Games.isPlayerInGame(event.whoClicked)) return
 
         if (event.rawSlots.any { event.view.getSlotType(it) == InventoryType.SlotType.ARMOR } && event.cursor?.type == Material.PLAYER_HEAD) {
             event.isCancelled = true

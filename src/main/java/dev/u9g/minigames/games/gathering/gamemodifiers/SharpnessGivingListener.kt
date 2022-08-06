@@ -3,7 +3,7 @@ package dev.u9g.minigames.games.gathering.gamemodifiers
 import com.destroystokyo.paper.MaterialTags
 import com.github.u9g.u9gutils.ItemBuilder
 import com.github.u9g.u9gutils.NBTUtil
-import dev.u9g.minigames.Minigames
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.games.gathering.level
 import dev.u9g.minigames.util.contains
 import org.bukkit.NamespacedKey
@@ -19,7 +19,7 @@ class SharpnessGivingListener : Listener {
     @EventHandler
     fun onHitEntity(event: EntityDamageByEntityEvent) {
         val player = event.damager
-        if (player is Player && player in Minigames.activeGames) {
+        if (player is Player && Games.isPlayerInGame(player)) {
             val item = player.inventory.itemInMainHand
             if (item.type.isAir || (item !in MaterialTags.SWORDS && item !in MaterialTags.AXES)) return
             val ib = ItemBuilder.from(item)

@@ -2,6 +2,7 @@ package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.debug.DebugSwitchType
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.Task
 import dev.u9g.minigames.util.mm
@@ -31,7 +32,7 @@ class FindNewBiomeFunctionality : Listener {
         }
 
         // TODO: Disallow after 10seconds & tell in GetBlock
-        if (event.sender !in Minigames.activeGames) return
+        if (!Games.isPlayerInGame(event.sender)) return
         val player = event.sender
         if (player is Player) {
             val biomeLoc = player.world.locateNearestBiome(player.location, Biome.PLAINS, Int.MAX_VALUE) ?: throw Error("Unable to find a biome for /findnewbiome")
@@ -41,7 +42,7 @@ class FindNewBiomeFunctionality : Listener {
                     err.sendToOps()
                     err.printStackTrace()
                 }
-                if (event.sender !in Minigames.activeGames) return@thenAccept
+                if (!Games.isPlayerInGame(event.sender)) return@thenAccept
                 Task.syncDelayed((Ticks.TICKS_PER_SECOND*2).toLong()) {
                     player.isInvulnerable = false
                 }

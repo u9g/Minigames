@@ -8,7 +8,12 @@ debug debugtype:debugtype {
     user player
 }
 
-startqueue queablegame:game {
+startqueue,sq queablegame:game {
     hook queuegame
+    user player
+}
+
+leave,l {
+    hook leavegame
     user player
 }

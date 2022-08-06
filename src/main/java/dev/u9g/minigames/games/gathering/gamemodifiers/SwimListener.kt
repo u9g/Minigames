@@ -2,6 +2,7 @@ package dev.u9g.minigames.games.gathering.gamemodifiers
 
 import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.debug.DebugSwitchType
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.util.Task
 import dev.u9g.minigames.util.mm
 import net.kyori.adventure.util.Ticks
@@ -22,7 +23,7 @@ class SwimListener : Listener {
 
         // TODO: Give dolphins grace & water breathing
         Task.syncRepeating(0, Ticks.TICKS_PER_SECOND.toLong()) {
-            Bukkit.getOnlinePlayers().stream().filter { it in Minigames.activeGames }.forEach { player ->
+            Bukkit.getOnlinePlayers().stream().filter { Games.isPlayerInGame(it) }.forEach { player ->
                 if (Minigames.debugSwitches[DebugSwitchType.SWIM_SPEED].contains(player)) {
                     val playerInWaterColor = if (!player.isInWater) "red" else "green"
                     val playerInDolphinsGrace = if (!player.isInWater) "red" else "green"

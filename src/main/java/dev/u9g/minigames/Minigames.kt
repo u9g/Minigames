@@ -1,12 +1,16 @@
 package dev.u9g.minigames
 
 import com.destroystokyo.paper.event.server.ServerExceptionEvent
+import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Multimap
 import dev.u9g.minigames.debug.DebugListener
 import dev.u9g.minigames.debug.DebugSwitchType
-import dev.u9g.minigames.games.Game
+import dev.u9g.minigames.games.Games
+import dev.u9g.minigames.games.GameQueuesManager
 import dev.u9g.minigames.games.GameType
+import dev.u9g.minigames.games.QueueableGameType
 import dev.u9g.minigames.games.gathering.GatheringWorldListeners
 import dev.u9g.minigames.games.gathering.gamemodifiers.*
 import dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems.AppliableItemManager
@@ -20,12 +24,13 @@ import net.megavex.scoreboardlibrary.api.ScoreboardManager
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import org.bukkit.plugin.java.JavaPlugin
 import redempt.redlib.commandmanager.ArgType
 import redempt.redlib.commandmanager.CommandHook
 import redempt.redlib.commandmanager.CommandParser
 
-class Minigames : JavaPlugin(), Listener {
+class Minigames : SuspendingJavaPlugin(), Listener {
+    private val queuesManager = GameQueuesManager()
+
     override fun onEnable() {
         ScoreboardLibraryImplementation.init()
         scoreboardManager = ScoreboardManager.scoreboardManager(this)
@@ -48,21 +53,28 @@ class Minigames : JavaPlugin(), Listener {
 
             @CommandHook("startgame")
             fun startGame(player: Player, game: GameType) {
-                if (player in activeGames) {
+                if (Games.isPlayerInGame(player)) {
                     player.sendMessage("You're already in a game :(".mm())
                 } else {
-                    activeGames[player] = game.start(player)
+                    Games[player] = game.start(player)
                 }
             }
 
             @CommandHook("queuegame")
             fun queueGame(player: Player, game: QueueableGameType) {
-                if (player in activeGames) {
+                if (Games.isPlayerInGame(player)) {
                     player.sendMessage("You're already in a game :(".mm())
                 } else {
-                    QueueableGameStarter(("<aqua><b>"+game.gameName).mm(), game).startQueue()
+                    this@Minigames.launch {
+                        queuesManager.startQueueFor(("<aqua><b>"+game.gameName).mm(), game)
+                    }
 //                    activeGames[player] = game.start(player)
                 }
+            }
+
+            @CommandHook("leavegame")
+            fun leaveGame(player: Player) {
+                player.health = .0
             }
         })
 
@@ -87,7 +99,6 @@ class Minigames : JavaPlugin(), Listener {
                 FastCookListener(),
                 HidePlayerAdvancementsListener(),
                 appliableItemManager!!,
-                PlayerDisconnectListener(),
                 EfficiencyGivingListener(),
                 SharpnessGivingListener(),
                 DontSaveWorldListener(),
@@ -99,7 +110,8 @@ class Minigames : JavaPlugin(), Listener {
                 LootingDisablerListener(),
                 SingleUseCraftingTableListener(),
                 GrapplingHookListener(),
-                PlayerEquipHeadListener()
+                PlayerEquipHeadListener(),
+                queuesManager
         ).forEach { Bukkit.getPluginManager().registerEvents(it, this) }
 
 //        EventListener(PlayerJoinEvent::class.java) {
@@ -120,10 +132,8 @@ class Minigames : JavaPlugin(), Listener {
     }
 
     companion object {
-        val activeGames = mutableMapOf<Player, Game>()
         var appliableItemManager: AppliableItemManager? = null
         val debugSwitches: Multimap<DebugSwitchType, Player> = HashMultimap.create()
         lateinit var scoreboardManager: ScoreboardManager
     }
 }
-

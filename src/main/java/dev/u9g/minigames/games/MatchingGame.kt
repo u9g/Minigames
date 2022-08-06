@@ -1,6 +1,5 @@
 package dev.u9g.minigames.games
 
-import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.makeItem
 import dev.u9g.minigames.util.GameState
 import dev.u9g.minigames.util.Task
@@ -138,11 +137,11 @@ class MatchingGame (private val player: Player) : Game {
         player.sendMessage("It took <green>$turns</green> <aqua>turns</aqua> to find <green>$HALF_OF_SLOTS_IN_INV <aqua>matches</aqua>".mm())
     }
 
-    fun internalEndGame() {
+    private fun internalEndGame() {
         gameState = GameState.OVER
         inv.close()
         gui.destroy()
-        Minigames.activeGames.remove(player)
+        Games.leftGame(player)
     }
 
     init {
@@ -151,7 +150,7 @@ class MatchingGame (private val player: Player) : Game {
 
     override fun gameState() = gameState
 
-    override fun begin() {
+    override suspend fun begin() {
         // TODO: Make Player -> Game Map
         InfoDisplayer.autoclosingDisplay("Matching".mm(), GAME_INFO_LORE, player)
             .thenAccept {

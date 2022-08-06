@@ -21,12 +21,20 @@ repositories {
 dependencies {
 //    compileOnly("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
     compileOnly("dev.u9g:sliver-api:1.18.2-R0.1-SNAPSHOT")
+
     implementation(kotlin("stdlib-jdk8"))
-    implementation("dev.u9g:U9GUtils:1.1.1")
-    implementation("com.github.Redempt:RedLib:6.5.2")
     implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.2")
+
+    implementation("dev.u9g:U9GUtils:1.1.1")
+
+    implementation("com.github.Redempt:RedLib:6.5.2")
+
     implementation("net.megavex.scoreboardlibrary:implementation:1.0.0")
     implementation("net.megavex.scoreboardlibrary:v1_18_R2:1.0.0")
+
+    implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.4.0")
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.4.0")
 }
 

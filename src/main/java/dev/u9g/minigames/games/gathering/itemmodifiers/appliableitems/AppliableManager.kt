@@ -2,6 +2,7 @@ package dev.u9g.minigames.games.gathering.itemmodifiers.appliableitems
 
 import dev.u9g.minigames.Minigames
 import dev.u9g.minigames.debug.DebugSwitchType
+import dev.u9g.minigames.games.Games
 import dev.u9g.minigames.games.gathering.itemmodifiers.remakeLore
 import dev.u9g.minigames.util.contains
 import dev.u9g.minigames.util.mm
@@ -18,7 +19,7 @@ import org.bukkit.inventory.ItemStack
 class AppliableItemManager(private val appliables: List<AppliableItem>) : Listener {
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
-        if (event.whoClicked !in Minigames.activeGames) {
+        if (!Games.isPlayerInGame(event.whoClicked)) {
             if (Minigames.debugSwitches[DebugSwitchType.APPLIABLE_ITEM].contains(event.whoClicked)) {
                 // stage 1
                 (event.whoClicked as Player).sendMessage("<gray>[</gray><green>Appliable Item Debug</green><gray>]</gray><light_purple>Failed at Stage 1".mm())
